@@ -25,4 +25,24 @@ class Board:
                 tile.position = new_position
                 break
 
-    
+    def print_board(self):
+        print()
+        board = [['_' for _ in range(3)] for _ in range(3)]
+
+        for tile in self.initial_tiles:
+            row, col = tile.position
+            board[row][col] = str(tile.value)
+
+        for row in board:
+            print(" ".join(row))
+        print()
+
+    def is_goal_state(self, goal_state):
+        count = 0
+        for x in range(1, 3, 1):
+            if self.initial_tiles[x].position == self.goal_position[x].position:
+                count += 1
+        if count == 3:
+            return True
+        else:
+            return False
