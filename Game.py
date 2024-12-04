@@ -68,3 +68,45 @@ class Game:
         g_positions = [input(), input(), input()]
         g_positions = self.check_position(g_positions)
         self.set_goal_state(g_positions)
+
+    def manhattan_distance(self, tile):
+        return (abs(tile.initial_position[0] - tile.goal_position[0]) +
+                abs(tile.initial_position[1] - tile.goal_position[1]))
+
+    def get_neighbors(self,tile):
+        vertical_neighbors = []
+        vertical_neighbors.append(tile.initial_position[1]-1)
+        horizontal_neighbors = []
+
+    #def move_tile_astar(self,tile):
+        #manhattan distance
+        #get_neighbours
+        #move tile and update its cost
+
+    def moving_tiles(self):
+        max_step = 10
+        tile_order = [1, 2, 3]
+        current_step = 0
+
+        while current_step < max_step:
+            for tile_number in tile_order:
+                if current_step >= max_step:
+                    break
+
+                tile = self.board.tiles[tile_number - 1]
+                goal_position = tile.goal_position
+
+                if tile.initial_position == goal_position:
+                    tile_order.remove(tile_number)
+                    continue
+
+                #self.board.move_tile_astar(tile)
+
+                current_step += 1
+
+                if self.board.is_goal_state():
+                    print("Goal state reached!")
+                    return True
+
+        print("Goal state not reached within 10 steps.")
+        return False
