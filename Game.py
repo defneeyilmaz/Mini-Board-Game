@@ -6,31 +6,24 @@ class Game:
         self.initial_state = None
         self.goal_state = None
 
-    def begins(self):
-        print("\nWelcome to the mini board game!")
-        print("You need to set the initial and goal states to start the game.\n")
-        print("Set the initial state by selecting one by one, the positions of tiles "
-              "1, 2, and 3 in order from the numbers on the board.\n")
-        possible_positions = "1 2 3,4 5 6,7 8 9"
-        possible_positions = possible_positions.split(",")
-        for x in possible_positions:
-            print(x)
-
-    def invalid_message(self):
-        print("Please enter valid positions.\n")
-
     def check_position(self, position):
         while not self.check_state(position):
-            self.invalid_message()
+            print("Please enter valid positions.\n")
             position = [input(), input(), input()]
         return position
 
     def check_state(self, positions):
-        if not len(positions) == 3: return False
-        if not len(set(positions)) == len(positions): return False
+        if not len(positions) == 3:
+            return False
+        elif not len(set(positions)) == len(positions):
+            return False
         for x in positions:
-            if 1 <= int(x) <= 9: return True
-            else: return False
+            try:
+                if not (1 <= int(x) <= 9):
+                    return False
+            except ValueError:
+                return False
+        return True
 
     def set_state(self, positions):
         tile = 1
@@ -50,10 +43,28 @@ class Game:
             tile += 1
         self.goal_state = positions
 
-    def goal_state_info(self):
+    def begins(self):
+        print("\nWelcome to the mini board game!")
+        print("You need to set the initial and goal states to start the game.\n")
+        print("Set the initial state by selecting one by one, the positions of tiles "
+              "1, 2, and 3 in order from the numbers on the board.\n")
+        possible_positions = "1 2 3,4 5 6,7 8 9"
+        possible_positions = possible_positions.split(",")
+        for x in possible_positions:
+            print(x)
+
+        i_positions = [input(), input(), input()]
+        i_positions = self.check_position(i_positions)
+        self.set_state(i_positions)
+        Board.print_board(self.board)
+
         print("Now, set the goal state by selecting one by one, the positions of tiles "
               "1, 2, and 3 in order from the numbers on the board.\n")
         possible_positions = "1 2 3,4 5 6,7 8 9"
         possible_positions = possible_positions.split(",")
         for x in possible_positions:
             print(x)
+
+        g_positions = [input(), input(), input()]
+        g_positions = self.check_position(g_positions)
+        self.set_goal_state(g_positions)
