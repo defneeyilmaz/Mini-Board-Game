@@ -80,6 +80,14 @@ class Game:
         #print(self.board.tiles[0].goal_position)
         self.moving_tiles_astar()
 
+    def get_occupied_positions(self, tile):
+        positions = []
+        tiles = [1,2,3]
+        tiles.remove(tile.value)
+        for x in tiles:
+            positions.append(self.board.tiles[x-1].initial_position)
+        return positions
+
     def manhattan_distance(self, goal_position, next_tile_position):
         return abs(int(goal_position[0]) - int(next_tile_position[0])) + abs(int(goal_position[1]) - int(next_tile_position[1]))
         #h_cost = self.manhattan_distance((row ,col), next_tile)
@@ -93,13 +101,13 @@ class Game:
     def possible_moves(self, tile):
         row, col = tile.initial_position
         possible_moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        occupied_positions = self.get_occupied_positions(tile)
 
         for i, j in possible_moves:
             new_row, new_col = row + i, col + j
+            next_tile = (new_row, new_col)
 
-            if 0 <= new_row < 3 and 0 <= new_col < 3:
-                next_tile = (new_row, new_col)
-
+            if 0 <= new_row < 3 and 0 <= new_col < 3 and next_tile not in occupied_positions:
                 step_cost = self.get_step_cost(tile, next_tile)
                 h_cost = self.manhattan_distance(tile.goal_position, next_tile)
                 total_cost = tile.cost + step_cost + h_cost
