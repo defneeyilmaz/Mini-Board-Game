@@ -32,16 +32,15 @@ class Board:
             print(" ".join(row))
         print()
 
-    def is_goal_state(self,tile_value):
-        for tile in self.tiles:
-            if tile.value == tile_value and tile.initial_position == tile.goal_position:
-                return True
-            else : return False
+    #def is_goal_state_for_tile(self, tile):
+    #    if tile.initial_position[0] == tile.goal_position[0] and tile.initial_position[1] == tile.goal_position[1]:
+    #        return True
+    #    else : return False
 
     def is_goal_state(self):
         count = 0
-        for x in range(0, 2, 1):
-            if self.tiles[x].initial_position == self.tiles[x].goal_position.position:
+        for x in range(0, 3, 1):
+            if self.tiles[x].initial_position == self.tiles[x].goal_position:
                 count += 1
         if count == 3:
             return True
