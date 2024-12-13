@@ -20,22 +20,19 @@ class Board:
                 tile.goal_position = new_position
                 break
 
-    def print_board(self):
-        print()
+    def print_board(self, position_type="current"):
         board = [['_' for _ in range(3)] for _ in range(3)]
 
         for tile in self.tiles:
-            row, col = tile.initial_position
+            if position_type == "current":
+                row, col = tile.initial_position
+            elif position_type == "goal":
+                row, col = tile.goal_position
             board[row][col] = str(tile.value)
 
         for row in board:
             print(" ".join(row))
         print()
-
-    #def is_goal_state_for_tile(self, tile):
-    #    if tile.initial_position[0] == tile.goal_position[0] and tile.initial_position[1] == tile.goal_position[1]:
-    #        return True
-    #    else : return False
 
     def is_goal_state(self):
         count = 0

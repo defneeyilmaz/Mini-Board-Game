@@ -3,9 +3,6 @@ class Tile:
         self.value = value
         self.initial_position = initial_position
         self.goal_position = goal_position
-        self.cost = 0
-        self.fringe = []
-        self.expansion_order = []
 
     def __repr__(self):
         return str(self.value)
