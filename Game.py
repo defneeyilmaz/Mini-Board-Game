@@ -1,5 +1,4 @@
 from Board import Board
-from Tile import Tile
 from Node import Node
 
 class Game:
@@ -23,14 +22,18 @@ class Game:
             print(" ".join(row))
 
     def show_expansions(self):
-        return "-".join(str(x) for x in self.expansion_order)
+        for node in range(len(self.expansion_order)):
+            print(f"____ Expansion {node+1} ____")
+            self.print_expanded_node(self.expansion_order[node])
 
+    #gettin the valid positions
     def check_position(self, position):
         while not self.check_state(position):
             print("Please enter valid positions.\n")
             position = [input(), input(), input()]
         return position
 
+    #validating given positions
     def check_state(self, positions):
         if not len(positions) == 3:
             return False
@@ -44,10 +47,12 @@ class Game:
                 return False
         return True
 
+    #conversion function for (1,2) -> 6
     def position_conversion(self, matrix):
         position = int((matrix[0] * 3) + matrix[1] + 1)
         return position
 
+    #conversion function for 5 -> (1,1)
     def matrix_conversion(self, position):
         row = (int(position) - 1) // 3
         col = (int(position) - 1) % 3
@@ -80,6 +85,7 @@ class Game:
             print(x)
         print()
 
+    #setting initial state by user input
         i_positions = [input(), input(), input()]
         i_positions = self.check_position(i_positions)
         self.set_state(i_positions)
@@ -94,12 +100,13 @@ class Game:
             print(x)
         print()
 
+        #setting goal state by user input
         g_positions = [input(), input(), input()]
         g_positions = self.check_position(g_positions)
         self.set_goal_state(g_positions)
         self.root_node = Node(i_positions, 0, None, None)
 
-        # Wrap heuristic values in lists
+        #wrapping heuristic values in lists
         heuristics = self.heuristic_distances(i_positions, g_positions)
         self.root_node.heuristic = [[h] for h in heuristics]  # Fix here
         self.temp_node = self.root_node
@@ -108,6 +115,7 @@ class Game:
         Board.print_board(self.board, "goal")
         self.moving_tiles_astar()
 
+    #getting other tiles' current positions
     def get_occupied_positions(self, tile):
         positions = []
         tiles = [1,2,3]
@@ -116,9 +124,12 @@ class Game:
             positions.append(self.board.tiles[x-1].initial_position)
         return positions
 
+    #tile-specific heuristic value
     def manhattan_distance(self, goal_position, next_tile_position):
-        return abs(int(goal_position[0]) - int(next_tile_position[0])) + abs(int(goal_position[1]) - int(next_tile_position[1]))
+        return (abs(int(goal_position[0]) - int(next_tile_position[0])) +
+                abs(int(goal_position[1]) - int(next_tile_position[1])))
 
+    #calculating state's heuristic values
     def heuristic_distances(self, initials, goals):
         heuristics = []
         for x in range(3):
@@ -147,7 +158,7 @@ class Game:
             new_row, new_col = row + i, col + j
             next_tile = (new_row, new_col)
 
-            # Skip if the next position is out of bounds or occupied
+            #skip if the next position is out of bounds or occupied
             if 0 <= new_row < 3 and 0 <= new_col < 3 and next_tile not in occupied_positions and next_tile != tile.initial_position:
                 step_cost = self.get_step_cost(tile, next_tile)
                 h_cost = self.manhattan_distance(tile.goal_position, next_tile)
@@ -157,7 +168,7 @@ class Game:
                 positions[int(tile.value) - 1] = str(self.position_conversion(next_tile))
                 node = Node(positions, self.temp_node.get_depth() + 1, self.temp_node, tile.value)
 
-                # Copy heuristic structure properly
+                #copy heuristics
                 node.heuristic = [h[:] for h in self.temp_node.heuristic]  # Fix here
                 node.heuristic[int(tile.value) - 1][0] = h_cost
                 node.total_cost[int(tile.value) - 1][0] = total_cost
@@ -178,9 +189,10 @@ class Game:
         visited_states = set()  # Track the entire board state to avoid revisiting
         progress_made = False
 
-        self.expansion_order.append(self.temp_node.state)
+        #expanding the initial state
+        self.expansion_order.append(self.temp_node)
         print("\n-------Expansion " + str(self.current_step + 1) + "-------\n")
-        print("Expanded Node:")
+        print("Initial Node Expanded:")
         Board.print_board(self.board, "current")
         self.current_step += 1
 
@@ -197,15 +209,14 @@ class Game:
 
                     tile = self.board.tiles[tile_number - 1]
 
-                    # Skip tiles already in their goal position
+                    #skip tile if it's already in its goal position
                     if tile.initial_position == tile.goal_position:
                         continue
 
-                    # Attempt to move the tile
+                    #getting possible moves
                     possible_move, tile_value = self.possible_moves(tile)
 
                     if possible_move > 0:
-                        #or current tile's fringe is not empty
                         print("\n-------Expansion "+str(self.current_step+1)+"-------\n")
                         # Find the least cost path from the fringe
                         least_cost_path = min(self.fringe[tile_number-1], key=lambda x: x[1])
@@ -215,19 +226,19 @@ class Game:
                         new_position = least_cost_path[0].state[tile_number - 1]
                         state_tuple = tuple(least_cost_path[0].state)
 
-                        # Check if the position or state has already been visited
+                        #check if the position or state has already been visited
                         if state_tuple in visited_states:
-                            continue  # Skip already visited states
+                            continue  #skip already visited states
 
-                        visited_states.add(state_tuple)  # Add the new state to visited states
-                        visited_positions[tile.value].add(new_position)  # Track the position of the tile
+                        visited_states.add(state_tuple)  #add the new state to visited states
+                        visited_positions[tile.value].add(new_position)  #track the position of the tile
 
-                        # Update the tile's position
+                        #update tile's position
                         tile.initial_position = self.matrix_conversion(new_position)
 
                         print(f"Tile #{tile_value} is moving to position {new_position}")
                         print(f"Current path cost for played tile is --> {least_cost_path[2]}")
-                        print(f"Current cost(heuristic and position cost) of the state is --> {least_cost_path[1]}")
+                        print(f"Current cost(heuristic and position cost) of the tile is --> {least_cost_path[1]}")
                         heuristic_sum = 0
                         for heuristic in self.temp_node.heuristic:
                             heuristic_sum+=heuristic[0]
@@ -239,18 +250,20 @@ class Game:
 
                         progress_made = True
                     else:
-                        print(f"Tile {tile.value} cannot make any moves at the moment.")
+                        print(f"Tile #{tile.value} cannot make any moves at the moment.\nGame over:/")
+                        break
 
-                    # Check if the board is in the goal state
+                    #check if the board is in the goal state
                     if self.board.is_goal_state():
-                        print("Goal state reached!")
+                        print("\nGoal state reached!\n")
+                        print(":Expansion Order:")
+                        self.show_expansions()
                         return True
 
                     self.current_step += 1
 
-                # If no progress is made, break the loop
+                #if no progress is made, break the loop
                 if not progress_made:
-                    print("No progress made. Breaking loop.")
                     break
-            print("Goal state not reached within 10 steps.")
+            print("\nGoal state not reached within 10 steps.")
             return False
