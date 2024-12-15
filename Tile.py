@@ -3,6 +3,3 @@ class Tile:
         self.value = value
         self.initial_position = initial_position
         self.goal_position = goal_position
-
-    def __repr__(self):
-        return str(self.value)

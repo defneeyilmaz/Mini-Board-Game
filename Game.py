@@ -145,12 +145,11 @@ class Game:
             return 2
 
     def is_initial_goal(self, initials, goals):
-        if initials == goals:
-            return True
+        return initials == goals
 
     def possible_moves(self, tile):
         row, col = tile.initial_position
-        possible_moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        possible_moves = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         occupied_positions = self.get_occupied_positions(tile)
         moves = []
 
@@ -162,21 +161,28 @@ class Game:
             if 0 <= new_row < 3 and 0 <= new_col < 3 and next_tile not in occupied_positions and next_tile != tile.initial_position:
                 step_cost = self.get_step_cost(tile, next_tile)
                 h_cost = self.manhattan_distance(tile.goal_position, next_tile)
-                total_cost = self.temp_node.cost[int(tile.value) - 1][0] + step_cost + h_cost
+                total_cost = step_cost + h_cost
 
                 positions = self.initial_state[:]
                 positions[int(tile.value) - 1] = str(self.position_conversion(next_tile))
                 node = Node(positions, self.temp_node.get_depth() + 1, self.temp_node, tile.value)
+                self.temp_node.add_child(node)
+                node.parent = self.temp_node
 
                 #copy heuristics
-                node.heuristic = [h[:] for h in self.temp_node.heuristic]  # Fix here
+                node.heuristic = [h[:] for h in self.temp_node.heuristic]
                 node.heuristic[int(tile.value) - 1][0] = h_cost
-                node.total_cost[int(tile.value) - 1][0] = total_cost
 
-                moves.append((node, total_cost, step_cost))
+                temp_node = node.parent
+                prev_costs = 0
+                while temp_node.parent is not None:
+                    prev_costs += temp_node.played_cost
+                    temp_node = temp_node.parent
 
-        moves.sort(key=lambda x: (
-            x[1], self.manhattan_distance(tile.goal_position, self.matrix_conversion(int(x[0].state[tile.value - 1])))))
+                heuristic_cost = sum(heuristic[0] for heuristic in node.heuristic)
+                node_cost = step_cost + heuristic_cost + prev_costs
+
+                moves.append((node, total_cost, step_cost, node_cost))
 
         for move in moves:
             self.fringe[tile.value - 1].append(move)
@@ -199,7 +205,6 @@ class Game:
         if self.is_initial_goal(self.initial_state, self.goal_state):
             print("\nThe initial board state is the goal state!")
             print("Total cost --> 0")
-            progress_made = True
         else:
             while self.current_step < self.max_step:
 
@@ -211,19 +216,36 @@ class Game:
 
                     #skip tile if it's already in its goal position
                     if tile.initial_position == tile.goal_position:
+                        if tile_number == 3 :
+                            self.temp_node.current_played_tile = 3
+                        else:
+                            self.temp_node.current_played_tile = tile_number
                         continue
+
+                    if self.current_step > 2:
+                        if tile_number == 1 and self.temp_node.current_played_tile != 3:
+                            continue
+                        elif tile_number == 2 and self.temp_node.current_played_tile != 1:
+                            continue
+                        elif tile_number == 3 and self.temp_node.current_played_tile != 2:
+                            continue
 
                     #getting possible moves
                     possible_move, tile_value = self.possible_moves(tile)
 
                     if possible_move > 0:
                         print("\n-------Expansion "+str(self.current_step+1)+"-------\n")
-                        # Find the least cost path from the fringe
-                        least_cost_path = min(self.fringe[tile_number-1], key=lambda x: x[1])
-                        self.fringe[tile_number-1].remove(least_cost_path)
+                        least_cost_path = min((move for sublist in self.fringe for move in sublist),key=lambda x: x[3])
+                        new_position = least_cost_path[0].state[least_cost_path[0].current_played_tile - 1]
+                        if least_cost_path[0].current_played_tile is not tile_value:
+                            print("Going back for moving with a least cost path...\n")
+                            print(f"Tile #{least_cost_path[0].current_played_tile} is moving to position {new_position}")
+                        else:
+                            print(f"Tile #{tile_value} is moving to position {new_position}")
+                        self.fringe[int(least_cost_path[0].current_played_tile)-1].remove(least_cost_path)
                         self.temp_node = least_cost_path[0]
+                        self.temp_node.played_cost = least_cost_path[2]
 
-                        new_position = least_cost_path[0].state[tile_number - 1]
                         state_tuple = tuple(least_cost_path[0].state)
 
                         #check if the position or state has already been visited
@@ -231,22 +253,21 @@ class Game:
                             continue  #skip already visited states
 
                         visited_states.add(state_tuple)  #add the new state to visited states
-                        visited_positions[tile.value].add(new_position)  #track the position of the tile
+                        visited_positions[least_cost_path[0].current_played_tile].add(new_position)  #track the position of the tile
 
                         #update tile's position
                         tile.initial_position = self.matrix_conversion(new_position)
 
-                        print(f"Tile #{tile_value} is moving to position {new_position}")
                         print(f"Current path cost for played tile is --> {least_cost_path[2]}")
                         print(f"Current cost(heuristic and position cost) of the tile is --> {least_cost_path[1]}")
-                        heuristic_sum = 0
-                        for heuristic in self.temp_node.heuristic:
-                            heuristic_sum+=heuristic[0]
+                        heuristic_sum = sum(heuristic[0] for heuristic in self.temp_node.heuristic)
                         print(f"Current heuristic for this state is --> {heuristic_sum}")
                         self.expansion_order.append(least_cost_path[0])
                         print("\nExpanded Node:")
                         self.print_expanded_node(least_cost_path[0])
                         self.set_state(least_cost_path[0].state)
+
+                        tile_number = least_cost_path[0].current_played_tile
 
                         progress_made = True
                     else:
