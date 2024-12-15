@@ -237,7 +237,7 @@ class Game:
                         print("\n-------Expansion "+str(self.current_step+1)+"-------\n")
                         least_cost_path = min((move for sublist in self.fringe for move in sublist),key=lambda x: x[3])
                         new_position = least_cost_path[0].state[least_cost_path[0].current_played_tile - 1]
-                        if least_cost_path[0].current_played_tile is not tile_value:
+                        if not least_cost_path[0] in self.temp_node.children:
                             print("Going back for moving with a least cost path...\n")
                             print(f"Tile #{least_cost_path[0].current_played_tile} is moving to position {new_position}")
                         else:
