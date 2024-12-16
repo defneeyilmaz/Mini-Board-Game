@@ -26,7 +26,7 @@ class Game:
             print(f"____ Expansion {node+1} ____")
             self.print_expanded_node(self.expansion_order[node])
 
-    #gettin the valid positions
+    #getting the valid positions
     def check_position(self, position):
         while not self.check_state(position):
             print("Please enter valid positions.\n")
@@ -85,7 +85,8 @@ class Game:
             print(x)
         print()
 
-    #setting initial state by user input
+        # --> Requirement 1
+        #setting initial state by user input
         i_positions = [input(), input(), input()]
         i_positions = self.check_position(i_positions)
         self.set_state(i_positions)
@@ -138,6 +139,7 @@ class Game:
             heuristics.append(abs(int(g[0]) - int(i[0])) + abs(int(g[1]) - int(i[1])))
         return heuristics
 
+    # --> Requirement 4
     def get_step_cost(self, tile, next_tile):
         if tile.initial_position[0] != next_tile[0]:
             return 1
@@ -148,6 +150,7 @@ class Game:
         return initials == goals
 
     def possible_moves(self, tile):
+        # --> Requirement 2
         row, col = tile.initial_position
         possible_moves = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         occupied_positions = self.get_occupied_positions(tile)
@@ -189,6 +192,7 @@ class Game:
 
         return len(moves), tile.value
 
+    # --> Requirement 5
     def moving_tiles_astar(self):
         tile_order = [1, 2, 3]
         visited_positions = {1: set(), 2: set(), 3: set()}  # Track visited positions for each tile
@@ -206,8 +210,9 @@ class Game:
             print("\nThe initial board state is the goal state!")
             print("Total cost --> 0")
         else:
+            # --> Requirement 6
             while self.current_step < self.max_step:
-
+                # --> Requirement 3
                 for tile_number in tile_order:
                     if self.current_step >= self.max_step:
                         break
@@ -235,6 +240,7 @@ class Game:
 
                     if possible_move > 0:
                         print("\n-------Expansion "+str(self.current_step+1)+"-------\n")
+                        #finding the least cost path from the fringe
                         least_cost_path = min((move for sublist in self.fringe for move in sublist),key=lambda x: x[3])
                         new_position = least_cost_path[0].state[least_cost_path[0].current_played_tile - 1]
                         if not least_cost_path[0] in self.temp_node.children:
@@ -258,6 +264,7 @@ class Game:
                         #update tile's position
                         tile.initial_position = self.matrix_conversion(new_position)
 
+                        # --> Requirement 6
                         print(f"Current path cost for played tile is --> {least_cost_path[2]}")
                         print(f"Current cost(heuristic and position cost) of the tile is --> {least_cost_path[1]}")
                         heuristic_sum = sum(heuristic[0] for heuristic in self.temp_node.heuristic)
@@ -266,8 +273,6 @@ class Game:
                         print("\nExpanded Node:")
                         self.print_expanded_node(least_cost_path[0])
                         self.set_state(least_cost_path[0].state)
-
-                        tile_number = least_cost_path[0].current_played_tile
 
                         progress_made = True
                     else:
